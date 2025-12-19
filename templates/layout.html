@@ -1,0 +1,90 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>my HOME - Smart Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block page_styles %}{% endblock %}
+</head>
+<body>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            document.body.classList.add(theme + '-mode');
+            if (window.innerWidth > 992) {
+                const sidebar = localStorage.getItem('sidebar') || 'expanded';
+                if (sidebar === 'collapsed') document.body.classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
+    <div id="sidebar-overlay"></div>
+    <button class="sidebar-toggle-btn" id="sidebar-toggle" title="Toggle Sidebar"><i class="fas fa-chevron-left"></i></button>
+    <aside class="sidebar">
+        <div class="sidebar-header"><i class="fas fa-brain"></i><h1 class="sidebar-logo-text">my HOME</h1></div>
+        <ul class="sidebar-menu">
+            <!-- ALL url_for CALLS ARE NOW CORRECT AND SIMPLIFIED -->
+                
+<li class="{{ 'active' if active_page == 'assist' else '' }}">
+    <a href="{{ url_for('assist.assist_mode') }}" title="Assist Mode">
+        <i class="fas fa-robot"></i>
+        <span>Assist Mode</span>
+    </a>
+</li>
+            <li class="{{ 'active' if active_page == 'dashboard' else '' }}"><a href="{{ url_for('dashboard') }}" title="Dashboard"><i class="fas fa-border-all"></i><span>Dashboard</span></a></li>
+            <li class="{{ 'active' if active_page == 'security' else '' }}"><a href="{{ url_for('security') }}" title="Security"><i class="fas fa-shield-halved"></i><span>Security</span></a></li>
+            <li class="{{ 'active' if active_page == 'control' else '' }}"><a href="{{ url_for('control.index') }}" title="Controls"><i class="fas fa-sliders"></i><span>Controls</span></a></li>
+            <li class="{{ 'active' if active_page == 'analytics' else '' }}"><a href="{{ url_for('analytics.analytics') }}" title="Analytics"><i class="fas fa-chart-pie"></i><span>Analytics</span></a></li>
+            <li class="{{ 'active' if active_page == 'water' else '' }}">
+    <a href="{{ url_for('water.water_dashboard') }}" title="Water Tank">
+        <i class="fas fa-tint"></i>
+        <span>Water Tank</span>
+    </a>
+     <li class="{{ 'active' if active_page == 'smartcontrol' else '' }}">
+    <a href="{{ url_for('smartcontrol.index') }}" title="Smart Control">
+    <i class="fas fa-microchip"></i>
+    <span>Smart Control</span>
+    </a>
+
+
+</li>
+            <li class="{{ 'active' if active_page == 'automation' else '' }}">
+    <a href="{{ url_for('automation.automation_dashboard') }}" title="Automation">
+        <i class="fas fa-cogs"></i>
+        <span>Automation</span>
+    </a>
+</li>  
+         <li class="{{ 'active' if active_page == 'watermonitor' else '' }}">
+    <a href="{{ url_for('watermonitor.water_dashboard') }}" title="Water Monitor">
+        <i class="fas fa-gauge-high"></i>
+        <span>Water Monitor</span>
+    </a>
+</li>
+        </ul>
+    </aside>
+    <main class="main-content">
+        <header class="top-bar">
+            <button class="action-btn mobile-menu-btn" id="mobile-menu-toggle"><i class="fas fa-bars"></i></button>
+            <div class="page-title"><h2>{% block page_title %}{% endblock %}</h2></div>
+            <div class="top-bar-actions">
+                <button class="action-btn" id="theme-toggle" title="Toggle Theme"><i class="fas fa-sun"></i><i class="fas fa-moon"></i></button>
+                <a href="{{ url_for('notifications') }}" class="action-btn" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span id="notification-badge" class="badge {{ 'hide' if unread_count == 0 }}">{{ unread_count }}</span>
+                </a>
+            </div>
+        </header>
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block page_scripts %}{% endblock %}
+</body>
+</html>

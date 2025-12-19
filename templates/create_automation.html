@@ -1,0 +1,416 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Create Automation{% endblock %}
+
+{% block content %}
+<div class="page-section">
+    <div class="card">
+        <div class="card-header">
+            <h3>Create New Automation</h3>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('automation.create_automation') }}" id="automation-form">
+                <div class="form-row">
+                    <div class="form-group col-12">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" name="title" class="form-control" required 
+                               placeholder="e.g., Cool Down House"
+                               style="background: rgba(255, 255, 255, 0.05); 
+                                      border: 1px solid rgba(255, 255, 255, 0.1); 
+                                      color: inherit; 
+                                      border-radius: 8px; 
+                                      padding: 12px 16px;
+                                      transition: all 0.3s ease;">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-12">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" class="form-control" 
+                                  placeholder="Describe what this automation does"
+                                  style="background: rgba(255, 255, 255, 0.05); 
+                                         border: 1px solid rgba(255, 255, 255, 0.1); 
+                                         color: inherit; 
+                                         border-radius: 8px; 
+                                         padding: 12px 16px;
+                                         min-height: 100px;
+                                         resize: vertical;
+                                         transition: all 0.3s ease;"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-12">
+                        <label>Automation Type</label>
+                        <div class="type-selector">
+                            <div class="type-option" data-type="value">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Value-based</span>
+                                <p>Trigger based on sensor values</p>
+                            </div>
+                            <div class="type-option" data-type="time">
+                                <i class="fas fa-clock"></i>
+                                <span>Time-based</span>
+                                <p>Trigger at specific times</p>
+                            </div>
+                        </div>
+                        <input type="hidden" id="type" name="type" value="value" required>
+                    </div>
+                </div>
+                
+                <!-- Value-based options -->
+                <div id="value-options">
+                    <div class="form-row">
+                        <div class="form-group col-md-6 col-12">
+                            <label for="variable">Monitor Value</label>
+                            <select id="variable" name="variable" class="form-control" required
+                                    style="background: rgba(255, 255, 255, 0.05); 
+                                           border: 1px solid rgba(255, 255, 255, 0.1); 
+                                           color: inherit; 
+                                           border-radius: 8px; 
+                                           padding: 12px 16px;
+                                           transition: all 0.3s ease;">
+                                <option value="temperature">Temperature (°C)</option>
+                                <option value="humidity">Humidity (%)</option>
+                                <option value="rain_chance">Rain Chance (%)</option>
+                                <option value="aqi">Air Quality Index</option>
+                                <option value="water_level">Water Tank Level (%)</option>
+                                <option value="is_raining">Rain Detection</option>
+                                <option value="gas_detected">Gas Detection</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group col-md-6 col-12">
+                            <label for="value_action">Then Perform This Action</label>
+                            <select id="value_action" name="value_action" class="form-control" required
+                                    style="background: rgba(255, 255, 255, 0.05); 
+                                           border: 1px solid rgba(255, 255, 255, 0.1); 
+                                           color: inherit; 
+                                           border-radius: 8px; 
+                                           padding: 12px 16px;
+                                           transition: all 0.3s ease;">
+                                <option value="turn_on_socket1">Turn On Socket 1</option>
+                                <option value="turn_off_socket1">Turn Off Socket 1</option>
+                                <option value="turn_on_socket2">Turn On Socket 2</option>
+                                <option value="turn_off_socket2">Turn Off Socket 2</option>
+                                <option value="turn_on_pump">Turn On Water Pump</option>
+                                <option value="turn_off_pump">Turn Off Water Pump</option>
+                                <option value="unlock_door">Unlock Front Door</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group col-12">
+                            <label>Trigger When Value Is Between</label>
+                            <div class="range-inputs">
+                                <div class="range-input-wrapper">
+                                    <input type="number" id="min_value" name="min_value" class="form-control" 
+                                           placeholder="Min" step="0.1" required
+                                           style="background: rgba(255, 255, 255, 0.05); 
+                                                  border: 1px solid rgba(255, 255, 255, 0.1); 
+                                                  color: inherit; 
+                                                  border-radius: 8px; 
+                                                  padding: 12px 16px;
+                                                  transition: all 0.3s ease;">
+                                </div>
+                                <span class="range-separator">and</span>
+                                <div class="range-input-wrapper">
+                                    <input type="number" id="max_value" name="max_value" class="form-control" 
+                                           placeholder="Max" step="0.1" required
+                                           style="background: rgba(255, 255, 255, 0.05); 
+                                                  border: 1px solid rgba(255, 255, 255, 0.1); 
+                                                  color: inherit; 
+                                                  border-radius: 8px; 
+                                                  padding: 12px 16px;
+                                                  transition: all 0.3s ease;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Time-based options -->
+                <div id="time-options" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group col-md-6 col-12">
+                            <label for="trigger_time">Trigger Time</label>
+                            <input type="time" id="trigger_time" name="trigger_time" class="form-control"
+                                   style="background: rgba(255, 255, 255, 0.05); 
+                                          border: 1px solid rgba(255, 255, 255, 0.1); 
+                                          color: inherit; 
+                                          border-radius: 8px; 
+                                          padding: 12px 16px;
+                                          transition: all 0.3s ease;">
+                        </div>
+                        
+                        <div class="form-group col-md-6 col-12">
+                            <label for="time_action">Then Perform This Action</label>
+                            <select id="time_action" name="time_action" class="form-control"
+                                    style="background: rgba(255, 255, 255, 0.05); 
+                                           border: 1px solid rgba(255, 255, 255, 0.1); 
+                                           color: inherit; 
+                                           border-radius: 8px; 
+                                           padding: 12px 16px;
+                                           transition: all 0.3s ease;">
+                                <option value="turn_on_socket1">Turn On Socket 1</option>
+                                <option value="turn_off_socket1">Turn Off Socket 1</option>
+                                <option value="turn_on_socket2">Turn On Socket 2</option>
+                                <option value="turn_off_socket2">Turn Off Socket 2</option>
+                                <option value="turn_on_pump">Turn On Water Pump</option>
+                                <option value="turn_off_pump">Turn Off Water Pump</option>
+                                <option value="unlock_door">Unlock Front Door</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Create Automation</button>
+                    <a href="{{ url_for('automation.automation_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_styles %}
+<style>
+    /* Form styling */
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -8px;
+    }
+    
+    .form-group {
+        padding: 0 8px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .col-12 { flex: 0 0 100%; max-width: 100%; }
+    .col-md-6 { flex: 0 0 100%; max-width: 100%; }
+    
+    @media (min-width: 768px) {
+        .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+    }
+    
+    .form-control {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    
+    /* Focus states for form elements */
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-accent) !important;
+        box-shadow: 0 0 0 2px rgba(var(--primary-accent-rgb), 0.2) !important;
+    }
+    
+    /* Placeholder styling */
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    /* Select option styling */
+    .form-control option {
+        background: var(--card-bg);
+        color: var(--text-color);
+    }
+    
+    /* Type selector */
+    .type-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .type-option {
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .type-option:hover {
+        border-color: var(--primary-accent);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .type-option.active {
+        border-color: var(--primary-accent);
+        background: rgba(var(--primary-accent-rgb), 0.05);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .type-option i {
+        font-size: 2.5rem;
+        color: var(--primary-accent);
+        margin-bottom: 1rem;
+    }
+    
+    .type-option span {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--heading-text);
+        font-size: 1.1rem;
+    }
+    
+    .type-option p {
+        font-size: 0.9rem;
+        color: var(--secondary-text);
+        margin-bottom: 0;
+        line-height: 1.4;
+    }
+    
+    /* Range inputs */
+    .range-inputs {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .range-input-wrapper {
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .range-separator {
+        color: var(--secondary-text);
+        font-weight: 500;
+        padding: 0 0.5rem;
+        white-space: nowrap;
+    }
+    
+    /* Form actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 120px;
+        transition: all 0.3s ease;
+    }
+    
+    /* Labels */
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--heading-text);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+        .type-selector {
+            grid-template-columns: 1fr;
+        }
+        
+        .range-inputs {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .range-separator {
+            text-align: center;
+            padding: 0.5rem 0;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+        }
+        
+        .type-option {
+            min-height: 120px;
+            padding: 1rem;
+        }
+        
+        .type-option i {
+            font-size: 2rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .form-group {
+            padding: 0 4px;
+        }
+        
+        .form-row {
+            margin: 0 -4px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Type selection
+        const typeOptions = document.querySelectorAll('.type-option');
+        const typeInput = document.getElementById('type');
+        const valueOptions = document.getElementById('value-options');
+        const timeOptions = document.getElementById('time-options');
+        
+        typeOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove active class from all options
+                typeOptions.forEach(opt => opt.classList.remove('active'));
+                
+                // Add active class to clicked option
+                this.classList.add('active');
+                
+                // Update hidden input
+                const selectedType = this.dataset.type;
+                typeInput.value = selectedType;
+                
+                // Show/hide options
+                if (selectedType === 'value') {
+                    valueOptions.style.display = 'block';
+                    timeOptions.style.display = 'none';
+                } else {
+                    valueOptions.style.display = 'none';
+                    timeOptions.style.display = 'block';
+                }
+            });
+        });
+        
+        // Set first option as active by default
+        if (typeOptions.length > 0) {
+            typeOptions[0].classList.add('active');
+        }
+    });
+</script>
+{% endblock %}

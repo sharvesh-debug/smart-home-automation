@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card" style="grid-column: 1 / -1; max-width: 600px; margin: 0 auto;">
+    <h2>💧 Water Pump Control</h2>
+    
+    <div class="pump-container" style="perspective: 1000px; height: 300px; margin: 30px auto;">
+        <div id="pump-3d" style="width: 200px; height: 200px; position: relative; transform-style: preserve-3d; margin: 0 auto; transform: rotateX(15deg);">
+            <!-- Pump body -->
+            <div style="position: absolute; width: 100%; height: 100%; background: linear-gradient(135deg, #3498db, #2c3e50); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; display: flex; justify-content: center; align-items: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+                <div style="width: 60%; height: 60%; background: rgba(41, 128, 185, 0.7); border-radius: 50%;"></div>
+            </div>
+            
+            <!-- Water effect -->
+            <div id="water-effect" style="position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(52, 152, 219, 0.5) 0%, transparent 70%); border-radius: 50%; opacity: 0;"></div>
+        </div>
+    </div>
+    
+    <button id="pump-btn" class="toggle-btn" style="padding: 14px 50px; background: linear-gradient(45deg, #ff416c, #ff4b2b); border: none; border-radius: 50px; color: white; font-weight: bold; font-size: 1.2rem; cursor: pointer; margin: 30px auto; display: block; box-shadow: 0 8px 25px rgba(255, 65, 108, 0.3); transition: all 0.3s ease;">START PUMP</button>
+</div>
+
+<a href="{{ url_for('control.index') }}" class="btn" style="display: block; max-width: 250px; margin: 40px auto; text-align: center; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">BACK TO MAIN</a>
+
+<script>
+    const pumpBtn = document.getElementById('pump-btn');
+    const waterEffect = document.getElementById('water-effect');
+    let pumpInterval;
+    let rotation = 0;
+
+    pumpBtn.addEventListener('click', function() {
+        const isOn = this.textContent.includes('START');
+        const newState = isOn ? 'on' : 'off';
+        
+        // Update button text and style
+        this.textContent = isOn ? 'STOP PUMP' : 'START PUMP';
+        
+        if (isOn) {
+            this.style.background = 'linear-gradient(45deg, #00b09b, #96c93d)';
+            this.style.boxShadow = '0 8px 25px rgba(0, 176, 155, 0.3)';
+            
+            // Show water effect
+            waterEffect.style.opacity = '1';
+            
+            // Start pump animation
+            pumpInterval = setInterval(() => {
+                rotation += 8;
+                waterEffect.style.transform = `rotate(${rotation}deg) scale(1.1)`;
+            }, 100);
+        } else {
+            this.style.background = 'linear-gradient(45deg, #ff416c, #ff4b2b)';
+            this.style.boxShadow = '0 8px 25px rgba(255, 65, 108, 0.3)';
+            
+            // Hide water effect
+            waterEffect.style.opacity = '0';
+            
+            // Stop animation
+            clearInterval(pumpInterval);
+        }
+        
+        // Send command to ESP
+        fetch(`/control/pump/${newState}`)
+            .then(response => response.text())
+            .then(data => console.log(data))
+            .catch(err => console.error('Error:', err));
+    });
+</script>
+{% endblock %}

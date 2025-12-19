@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Tank Monitoring</title>
+    <style>
+        /* Water Tank Visualization */
+        .water-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .water-title {
+            color: #1a6fb0;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tank-wrapper {
+            perspective: 1000px;
+            margin: 0 auto 3rem;
+            width: 300px;
+        }
+
+        .tank-container {
+            position: relative;
+            transform: rotateX(10deg);
+            transform-style: preserve-3d;
+            height: 400px;
+        }
+
+        .tank {
+            position: relative;
+            width: 200px;
+            height: 350px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 
+                inset 0 0 20px rgba(0,0,0,0.2),
+                0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .tank-glass {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 8px solid #d1e8ff;
+            border-radius: 10px;
+            z-index: 20;
+            box-shadow: 
+                inset 0 0 20px rgba(255,255,255,0.5),
+                0 0 10px rgba(173, 216, 230, 0.5);
+        }
+
+        .tank-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px solid #2c3e50;
+            border-radius: 10px;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .water {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
+            transition: height 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+            z-index: 10;
+            box-shadow: inset 0 0 50px rgba(0, 0, 150, 0.5);
+        }
+
+        .wave {
+            position: absolute;
+            width: 200%;
+            height: 20px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 120 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 Q30 15 60 10 T120 10 L120 20 L0 20 Z" fill="rgba(255,255,255,0.3)"/></svg>') repeat-x;
+            background-size: 120px 20px;
+            animation: wave 3s linear infinite;
+            opacity: 0.6;
+        }
+
+        .wave-front {
+            top: -10px;
+            animation-duration: 2.5s;
+            opacity: 0.4;
+        }
+
+        .wave-back {
+            top: -15px;
+            animation-duration: 4s;
+            animation-delay: -1s;
+        }
+
+        .bubbles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="white" opacity="0.6"/><circle cx="50" cy="35" r="1.5" fill="white" opacity="0.4"/><circle cx="70" cy="20" r="1" fill="white" opacity="0.3"/></svg>') repeat;
+            background-size: 100px 100px;
+            animation: bubbles 15s linear infinite;
+        }
+
+        .tank-base {
+            width: 240px;
+            height: 20px;
+            background: linear-gradient(to bottom, #4b4b4b, #2c3e50);
+            margin: -10px auto 0;
+            border-radius: 5px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .water-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 
+                0 2px 10px rgba(0,0,150,0.5),
+                0 0 10px rgba(255,255,255,0.8);
+            z-index: 25;
+            pointer-events: none;
+        }
+
+        /* Info Card */
+        .water-info-card {
+            background: linear-gradient(135deg, #1a6fb0, #0d4a7c);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            color: white;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .card-header {
+            background: rgba(0,0,0,0.2);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .water-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        /* Bubble Animation */
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: bubble-rise linear forwards;
+            z-index: 15;
+        }
+
+        /* Animations */
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-60px); }
+        }
+
+        @keyframes bubbles {
+            0% { background-position: 0 0; }
+            100% { background-position: 100px 1000px; }
+        }
+
+        @keyframes bubble-rise {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .tank-wrapper {
+                width: 250px;
+            }
+            
+            .tank {
+                width: 180px;
+                height: 300px;
+            }
+            
+            .water-percentage {
+                font-size: 2.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="water-container">
+        <h1 class="water-title">Water Tank Monitoring</h1>
+        
+        <!-- 3D Water Tank Visualization -->
+        <div class="tank-wrapper">
+            <div class="tank-container">
+                <div class="tank">
+                    <div class="water" id="water-fill" style="height: 75%;">
+                        <div class="wave wave-back"></div>
+                        <div class="wave wave-front"></div>
+                        <div class="bubbles"></div>
+                    </div>
+                    <div class="tank-glass"></div>
+                    <div class="tank-frame"></div>
+                </div>
+                <div class="tank-base"></div>
+                <div class="water-percentage" id="water-percentage">{{ level }}%</div>
+            </div>
+        </div>
+        
+        <!-- Info Card -->
+        <div class="water-info-card">
+            <div class="card-header">
+                <h3>Current Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="water-stats">
+                    <div class="stat">
+                        <span class="stat-label">Capacity:</span>
+                        <span class="stat-value">1L</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Height:</span>
+                        <span class="stat-value">15cm</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Last Update:</span>
+                        <span class="stat-value" id="last-update">Just now</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const waterFill = document.getElementById('water-fill');
+            const waterPercentage = document.getElementById('water-percentage');
+            const lastUpdate = document.getElementById('last-update');
+            
+            // Update water level every 30 seconds
+            function updateWaterLevel() {
+                fetch('/water/update_level')
+                    .then(response => response.json())
+                    .then(data => {
+                        const newLevel = data.level;
+                        waterFill.style.height = `${newLevel}%`;
+                        
+                        // Animate percentage change
+                        let currentDisplay = parseInt(waterPercentage.textContent);
+                        let start = null;
+                        
+                        function animatePercentage(timestamp) {
+                            if (!start) start = timestamp;
+                            const progress = Math.min((timestamp - start) / 1000, 1);
+                            const currentValue = Math.floor(currentDisplay + (newLevel - currentDisplay) * progress);
+                            waterPercentage.textContent = `${currentValue}%`;
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(animatePercentage);
+                            } else {
+                                waterPercentage.textContent = `${newLevel}%`;
+                            }
+                        }
+                        
+                        requestAnimationFrame(animatePercentage);
+                        
+                        // Update last updated time
+                        lastUpdate.textContent = new Date().toLocaleTimeString();
+                    });
+            }
+            
+            // Initial update
+            updateWaterLevel();
+            
+            // Set interval for updates
+            setInterval(updateWaterLevel, 30000);
+            
+            // Create dynamic bubbles
+            function createBubble() {
+                if (Math.random() > 0.7) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bubble';
+                    
+                    // Random properties
+                    const size = Math.random() * 10 + 5;
+                    const left = Math.random() * 90 + 5;
+                    const duration = Math.random() * 6 + 4;
+                    
+                    bubble.style.cssText = `
+                        width: ${size}px;
+                        height: ${size}px;
+                        left: ${left}%;
+                        bottom: -20px;
+                        animation-duration: ${duration}s;
+                    `;
+                    
+                    waterFill.appendChild(bubble);
+                    
+                    // Remove bubble after animation
+                    setTimeout(() => {
+                        if (waterFill.contains(bubble)) {
+                            waterFill.removeChild(bubble);
+                        }
+                    }, duration * 1000);
+                }
+            }
+            
+            // Add bubbles periodically
+            setInterval(createBubble, 300);
+        });
+    </script>
+</body>
+</html>

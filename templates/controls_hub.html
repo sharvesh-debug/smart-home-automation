@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>⚡ Power Control</h2>
+    <p>Manage electrical sockets and devices</p>
+    <a href="{{ url_for('control.power_control') }}" class="btn">Access Power Panel</a>
+</div>
+
+<div class="card">
+    <h2>💧 Water Motor Control</h2>
+    <p>Control water pump and irrigation</p>
+    <a href="{{ url_for('control.motor_control') }}" class="btn">Access Pump Control</a>
+</div>
+{% endblock %}

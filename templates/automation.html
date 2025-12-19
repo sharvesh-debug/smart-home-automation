@@ -1,0 +1,226 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Automation Setup{% endblock %}
+
+{% block content %}
+<div class="page-section">
+    <div class="card">
+        <div class="card-header">
+            <h3>Automation Setup</h3>
+            
+        </div>
+        
+        <div class="card-body">
+            {% if automations %}
+            <div class="automation-grid">
+                {% for auto in automations %}
+                <div class="automation-card">
+                    <div class="automation-icon">
+                        {% if auto.automation_type == 'value' %}
+                        <i class="fas fa-wave-square"></i>
+                        {% else %}
+                        <i class="fas fa-clock"></i>
+                        {% endif %}
+                    </div>
+                    <h4>{{ auto.title }}</h4>
+                    <p>{{ auto.description }}</p>
+                    
+                    <div class="automation-details">
+                        {% if auto.automation_type == 'value' %}
+                        <p>When {{ auto.variable }} is between {{ auto.min_value }} and {{ auto.max_value }}</p>
+                        <p>Then: {{ auto.action|replace('_', ' ')|title }}</p>
+                        {% else %}
+                        <p>At {{ auto.trigger_time.strftime('%H:%M') }}</p>
+                        <p>Then: {{ auto.action|replace('_', ' ')|title }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="automation-status">
+                        <span class="status-badge {{ 'enabled' if auto.enabled else 'disabled' }}">
+                            {{ 'Enabled' if auto.enabled else 'Disabled' }}
+                        </span>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('automation.delete_automation', id=auto.id) }}">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+                
+                <div class="automation-card add-new" onclick="window.location.href='{{ url_for('automation.create_automation') }}'">
+                    <i class="fas fa-plus-circle"></i>
+                    <h4>Create New Automation</h4>
+                    <p>Set up custom automation rules</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="no-automations">
+                <i class="fas fa-robot"></i>
+                <h4>No Automations Configured</h4>
+                <p>Create your first automation to get started</p>
+                <a href="{{ url_for('automation.create_automation') }}" class="btn btn-primary">
+                    Create Automation
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_styles %}
+<style>
+    .automation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .automation-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        transform: translateY(0) rotateX(0);
+        box-shadow: var(--shadow-light);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .automation-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--primary-accent);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+    }
+
+    .automation-card:hover {
+        transform: translateY(-10px) rotateX(5deg);
+        box-shadow: var(--shadow-heavy);
+    }
+
+    .automation-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .automation-card.add-new {
+        border: 2px dashed var(--border-color);
+        background: transparent;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .automation-card.add-new:hover {
+        background: rgba(var(--primary-accent-rgb), 0.05);
+        border-color: var(--primary-accent);
+    }
+
+    .automation-card.add-new i {
+        font-size: 3rem;
+        color: var(--primary-accent);
+        margin-bottom: 1rem;
+    }
+
+    .automation-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        background: rgba(var(--primary-accent-rgb), 0.1);
+        color: var(--primary-accent);
+        font-size: 1.8rem;
+    }
+
+    .automation-card h4 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        color: var(--heading-text);
+    }
+
+    .automation-card p {
+        color: var(--secondary-text);
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    .automation-details {
+        background: rgba(var(--border-color-rgb), 0.2);
+        border-radius: 8px;
+        padding: 0.8rem;
+        margin-top: auto;
+        margin-bottom: 1rem;
+    }
+
+    .automation-details p {
+        margin-bottom: 0.3rem;
+        font-size: 0.9rem;
+    }
+
+    .automation-status {
+        margin-bottom: 1rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .status-badge.enabled {
+        background: rgba(var(--success-rgb), 0.15);
+        color: var(--success);
+    }
+
+    .status-badge.disabled {
+        background: rgba(var(--secondary-text-rgb), 0.15);
+        color: var(--secondary-text);
+    }
+
+    .no-automations {
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+
+    .no-automations i {
+        font-size: 4rem;
+        color: var(--secondary-text);
+        margin-bottom: 1.5rem;
+        opacity: 0.5;
+    }
+
+    .no-automations h4 {
+        margin-bottom: 0.5rem;
+        color: var(--heading-text);
+    }
+
+    .no-automations p {
+        margin-bottom: 1.5rem;
+        color: var(--secondary-text);
+    }
+
+    @media (max-width: 768px) {
+        .automation-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %} 

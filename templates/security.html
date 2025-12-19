@@ -1,0 +1,329 @@
+{% extends 'layout.html' %}
+{% block page_title %}Security Hub{% endblock %}
+
+{% block content %}
+<div class="security-container">
+    <!-- Main Live Feed Card -->
+    <div class="card live-feed-card">
+        <div class="card-header">
+            <h3>Live Feed: Front Door</h3>
+            <span id="security-status" class="status-badge">MONITORING</span>
+        </div>
+        <div class="video-container">
+            <img src="{{ url_for('video_feed') }}" alt="Live Feed" class="live-feed">
+        </div>
+    </div>
+
+    <!-- Permission Request Overlay - Now outside video container -->
+    <div class="overlay" id="permission-overlay">
+        <div class="overlay-content">
+            <h4><i class="fas fa-user-question"></i> Access Request</h4>
+            <img id="unknown-face-img" class="face-image" src="{{ url_for('face_image') }}" alt="Detected Face">
+            <p>Unknown person detected. Grant access?</p>
+            <div class="action-buttons">
+                <button id="allow-btn" class="btn btn-success">
+                    <i class="fas fa-check"></i> Allow
+                </button>
+                <button id="allowonce-btn" class="btn btn-success">
+                    <i class="fas fa-check"></i> Allow once
+                </button>
+                <button id="deny-btn" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Deny
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_styles %}
+<style>
+    .security-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        position: relative;
+    }
+    
+    .card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+    
+    .card-header {
+        padding: 1.2rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background: rgba(0, 0, 0, 0.03);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--heading-text);
+    }
+    
+    /* Live Feed */
+    .live-feed-card {
+        flex: 1;
+    }
+    
+    .video-container {
+        position: relative;
+        background: #000;
+        border-radius: 0 0 12px 12px;
+        overflow: hidden;
+        aspect-ratio: 16/9;
+    }
+    
+    .live-feed {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    
+    /* Overlay - Now positioned relative to security-container */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+    
+    .overlay.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .overlay-content {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        max-width: 90%;
+        width: 400px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+    }
+    
+    .overlay.visible .overlay-content {
+        transform: scale(1);
+    }
+    
+    .overlay-content h4 {
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        color: var(--primary-text);
+    }
+    
+    .face-image {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-accent);
+        margin: 0 auto 1.5rem;
+        display: block;
+    }
+    
+    .overlay-content p {
+        color: var(--secondary-text);
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.8rem 1.8rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+    }
+    
+    .btn-success {
+        background: var(--success);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #28a745;
+        transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+        background: var(--danger);
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #dc3545;
+        transform: translateY(-2px);
+    }
+    
+    /* Status Badge */
+    .status-badge {
+        padding: 0.35rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(40, 167, 69, 0.15);
+        color: var(--success);
+        border: 1px solid var(--success);
+    }
+    
+    .status-badge.warning {
+        background: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+        border: 1px solid #ffc107;
+    }
+    
+    .status-badge.alert {
+        background: rgba(220, 53, 69, 0.15);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+    }
+</style>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('permission-overlay');
+    const unknownFaceImg = document.getElementById('unknown-face-img');
+    const allowBtn = document.getElementById('allow-btn');
+    const allowonceBtn = document.getElementById('allowonce-btn');
+    const denyBtn = document.getElementById('deny-btn');
+    const securityStatus = document.getElementById('security-status');
+
+    let permissionRequestActive = false;
+
+    // Check for permission requests
+    function checkPermissionStatus() {
+        if (permissionRequestActive) return; // Don't check if already active
+        
+        fetch('/api/permission_status')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Permission status:', data);
+                
+                if (data.active && data.has_face_image && !permissionRequestActive) {
+                    permissionRequestActive = true;
+                    
+                    // Update the face image with cache buster
+                    unknownFaceImg.src = `{{ url_for('face_image') }}?t=${Date.now()}`;
+                    
+                    // Show the overlay
+                    overlay.classList.add('visible');
+                    securityStatus.textContent = 'PERMISSION REQUEST';
+                    securityStatus.classList.add('warning');
+                    
+                    console.log('Permission overlay shown');
+                } else if (!data.active && permissionRequestActive) {
+                    // Hide overlay if no longer active
+                    hidePermissionOverlay();
+                }
+            })
+            .catch(error => {
+                console.error('Error checking permission status:', error);
+                securityStatus.textContent = 'CONNECTION ERROR';
+                securityStatus.classList.remove('warning');
+                securityStatus.classList.add('alert');
+            });
+    }
+
+    function hidePermissionOverlay() {
+        overlay.classList.remove('visible');
+        permissionRequestActive = false;
+        securityStatus.textContent = 'MONITORING';
+        securityStatus.classList.remove('warning', 'alert');
+        console.log('Permission overlay hidden');
+    }
+
+    // Send security action to server
+    function sendSecurityAction(action, data = {}) {
+        fetch('/api/security_action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ...data })
+        })
+        .then(response => response.json())
+        .then(result => {
+            console.log('Security action response:', result);
+            hidePermissionOverlay();
+        })
+        .catch(error => {
+            console.error('Error sending security action:', error);
+            hidePermissionOverlay();
+        });
+    }
+
+    // Button event handlers
+    allowBtn.addEventListener('click', () => {
+        const name = prompt("Please enter a name for this person to grant permanent access:", "");
+        if (name && name.trim() !== "") {
+            sendSecurityAction('allow', { name: name.trim() });
+        } else if (name !== null) {
+            alert("A name is required to grant permanent access.");
+        }
+        hidePermissionOverlay();
+    });
+
+    denyBtn.addEventListener('click', () => {
+        sendSecurityAction('deny');
+         hidePermissionOverlay();
+    });
+    allowonceBtn.addEventListener('click', () => {
+	const name = prompt("Please enter a name for this person to grant permanent access temporarily:", "");
+        if (name && name.trim() !== "") {
+            sendSecurityAction('allowonce', { name: name.trim() });
+        } else if (name !== null) {
+            alert("A name is required to grant permanent access.");
+        }
+        hidePermissionOverlay();
+        
+    });
+    
+    
+    // Check for permission requests every 2 seconds
+    setInterval(checkPermissionStatus, 2000);
+    
+    // Initial check
+    checkPermissionStatus();
+});
+</script>
+{% endblock %}

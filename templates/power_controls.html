@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>🔌 Socket 1</h2>
+    
+    <div class="socket-container" style="perspective: 1000px; height: 250px; margin: 30px auto;">
+        <div class="socket-3d" style="width: 180px; height: 180px; position: relative; transform-style: preserve-3d; margin: 0 auto; transition: transform 0.5s;">
+            <!-- Front face -->
+            <div style="position: absolute; width: 100%; height: 100%; background: linear-gradient(135deg, #2c3e50, #1a1a2e); border-radius: 20px; display: flex; justify-content: center; align-items: center; backface-visibility: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+                <div style="width: 60px; height: 100px; background: #0d0d0d; border-radius: 10px; position: relative;">
+                    <div style="position: absolute; top: 20px; left: 10px; width: 40px; height: 60px; background: #1a1a1a; border-radius: 5px;"></div>
+                </div>
+            </div>
+            
+            <!-- Back face (glowing when on) -->
+            <div id="socket1-back" style="position: absolute; width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a2e, #2c3e50); border-radius: 20px; display: flex; justify-content: center; align-items: center; backface-visibility: hidden; transform: rotateY(180deg); box-shadow: 0 0 30px rgba(46, 204, 113, 0);">
+                <div style="width: 100%; height: 100%; background: radial-gradient(circle, rgba(46,204,113,0.3) 0%, transparent 70%); border-radius: 20px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="toggle-btn" data-socket="1" style="padding: 14px 40px; background: linear-gradient(45deg, #ff416c, #ff4b2b); border: none; border-radius: 50px; color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 20px; box-shadow: 0 8px 25px rgba(255, 65, 108, 0.3); transition: all 0.3s ease;">TURN ON</button>
+</div>
+
+<div class="card">
+    <h2>🔌 Socket 2</h2>
+    
+    <div class="socket-container" style="perspective: 1000px; height: 250px; margin: 30px auto;">
+        <div class="socket-3d" style="width: 180px; height: 180px; position: relative; transform-style: preserve-3d; margin: 0 auto; transition: transform 0.5s;">
+            <!-- Front face -->
+            <div style="position: absolute; width: 100%; height: 100%; background: linear-gradient(135deg, #2c3e50, #1a1a2e); border-radius: 20px; display: flex; justify-content: center; align-items: center; backface-visibility: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+                <div style="width: 60px; height: 100px; background: #0d0d0d; border-radius: 10px; position: relative;">
+                    <div style="position: absolute; top: 20px; left: 10px; width: 40px; height: 60px; background: #1a1a1a; border-radius: 5px;"></div>
+                </div>
+            </div>
+            
+            <!-- Back face (glowing when on) -->
+            <div id="socket2-back" style="position: absolute; width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a2e, #2c3e50); border-radius: 20px; display: flex; justify-content: center; align-items: center; backface-visibility: hidden; transform: rotateY(180deg); box-shadow: 0 0 30px rgba(46, 204, 113, 0);">
+                <div style="width: 100%; height: 100%; background: radial-gradient(circle, rgba(46,204,113,0.3) 0%, transparent 70%); border-radius: 20px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="toggle-btn" data-socket="2" style="padding: 14px 40px; background: linear-gradient(45deg, #ff416c, #ff4b2b); border: none; border-radius: 50px; color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 20px; box-shadow: 0 8px 25px rgba(255, 65, 108, 0.3); transition: all 0.3s ease;">TURN ON</button>
+</div>
+
+<a href="{{ url_for('control.index') }}" class="btn" style="display: block; max-width: 250px; margin: 40px auto; text-align: center; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">BACK TO MAIN</a>
+
+<script>
+    // Store socket states globally
+    const socketStates = {
+        1: false, // Socket 1 starts as off
+        2: false  // Socket 2 starts as off
+    };
+
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        const socketNum = btn.getAttribute('data-socket');
+        
+        // Set initial button text based on state
+        btn.textContent = socketStates[socketNum] ? 'TURN OFF' : 'TURN ON';
+        
+        btn.addEventListener('click', function() {
+            // Toggle the state
+            socketStates[socketNum] = !socketStates[socketNum];
+            const newState = socketStates[socketNum] ? 'on' : 'off';
+            
+            // Update button text and style
+            this.textContent = socketStates[socketNum] ? 'TURN OFF' : 'TURN ON';
+            
+            if (newState === 'on') {
+                this.style.background = 'linear-gradient(45deg, #00b09b, #96c93d)';
+                this.style.boxShadow = '0 8px 25px rgba(0, 176, 155, 0.3)';
+                
+                // 3D flip effect
+                const socket3d = this.parentElement.querySelector('.socket-3d');
+                socket3d.style.transform = 'rotateY(180deg)';
+                
+                // Add glow effect
+                const backFace = document.getElementById(`socket${socketNum}-back`);
+                backFace.style.boxShadow = '0 0 30px rgba(46, 204, 113, 0.5)';
+            } else {
+                this.style.background = 'linear-gradient(45deg, #ff416c, #ff4b2b)';
+                this.style.boxShadow = '0 8px 25px rgba(255, 65, 108, 0.3)';
+                
+                // 3D flip effect
+                const socket3d = this.parentElement.querySelector('.socket-3d');
+                socket3d.style.transform = 'rotateY(0deg)';
+                
+                // Remove glow
+                const backFace = document.getElementById(`socket${socketNum}-back`);
+                backFace.style.boxShadow = '0 0 30px rgba(46, 204, 113, 0)';
+            }
+            
+            // Send command to ESP
+            fetch(`/control/socket/${socketNum}/${newState}`)
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .catch(err => console.error('Error:', err));
+        });
+    });
+</script>
+
+{% endblock %}

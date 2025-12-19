@@ -1,0 +1,452 @@
+{% extends 'layout.html' %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard-grid">
+    <!-- Weather/Environment Card -->
+    <div class="card weather-card">
+        <div class="card-header">
+            <h3>Environment</h3>
+            <span class="location"><i class="fas fa-map-marker-alt"></i> {{ weather.city }}</span>
+        </div>
+        <div class="weather-main">
+            {% if weather.is_raining %}
+            <i class="fas fa-cloud-rain weather-icon raining"></i>
+            {% else %}
+            <i class="fas fa-sun weather-icon sunny"></i>
+            {% endif %}
+            <span class="temp">{{ weather.temp }}°C</span>
+            <p class="weather-status">{{ weather.status }}</p>
+        </div>
+        <div class="weather-details">
+            <div class="detail-item">
+                <i class="fas fa-tint"></i>
+                <span>{{ weather.humidity }}%</span>
+                <p>Humidity</p>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-umbrella"></i>
+                <span>{{ weather.rain_chance }}%</span>
+                <p>Rain Chance</p>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-clock"></i>
+                <span>{{ weather.last_updated }}</span>
+                <p>Last Updated</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gas Detection Card -->
+    <div class="card gas-card">
+        <div class="card-header">
+            <h3>Gas Detection</h3>
+            <i class="fas fa-wind"></i>
+        </div>
+        <div class="gas-status">
+            {% if weather.gas_detected %}
+            <div class="alert-badge danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Leak Detected!</span>
+            </div>
+            <p class="warning-text">Gas leak detected. Ventilate area immediately!</p>
+            {% else %}
+            <div class="alert-badge safe">
+                <i class="fas fa-check-circle"></i>
+                <span>All Clear</span>
+            </div>
+            <p class="normal-text">No gas leaks detected</p>
+            {% endif %}
+        </div>
+        <div class="sensor-status">
+            <span class="status-label">Sensor Status:</span>
+            <span class="status-value {% if weather.gas_detected %}danger{% else %}safe{% endif %}">
+                {% if weather.gas_detected %}DANGER{% else %}NORMAL{% endif %}
+            </span>
+        </div>
+    </div>
+    
+   
+   
+           
+    <!-- AQI Card -->
+<div class="card aqi-card">
+    <div class="card-header">
+        <h3>Air Quality</h3>
+        <span class="location"><i class="fas fa-map-marker-alt"></i> {{ weather.city }}</span>
+    </div>
+    <div class="aqi-main">
+        <div class="aqi-value aqi-{{ aqi.aqi }}">{{ aqi.aqi }}</div>
+        <p class="aqi-category">{{ aqi.category }}</p>
+    </div>
+    <div class="aqi-details">
+        <div class="detail-item">
+            <i class="fas fa-skull"></i>
+            <span>{{ aqi.main_pollutant }}</span>
+            <p>Main Pollutant</p>
+        </div>
+        <div class="detail-item">
+            <i class="fas fa-weight"></i>
+            <span>{{ aqi.concentration }} μg/m³</span>
+            <p>Concentration</p>
+        </div>
+    </div>
+    <div class="aqi-advisory">
+        <i class="fas fa-comment-medical"></i>
+        <p>{{ aqi.advisory }}</p>
+    </div>
+    <div class="aqi-updated">
+        <i class="fas fa-clock"></i>
+        <span>Last Updated: {{ aqi.last_updated }}</span>
+    </div>
+</div>
+    
+    <!-- System Status Card -->
+    <div class="card system-card">
+        <div class="card-header">
+            <h3>System Status</h3>
+            <i class="fas fa-server"></i>
+        </div>
+        <div class="status-grid">
+            <div class="status-item {% if camera %}online{% else %}offline{% endif %}">
+                <i class="fas fa-video"></i>
+                <span>Camera</span>
+                <span>{% if camera %}Online{% else %}Offline{% endif %}</span>
+            </div>
+            <div class="status-item {% if security_system %}online{% else %}offline{% endif %}">
+                <i class="fas fa-shield-alt"></i>
+                <span>Security</span>
+                <span>{% if security_system %}Active{% else %}Inactive{% endif %}</span>
+            </div>
+            <div class="status-item online">
+                <i class="fas fa-cloud"></i>
+                <span>Weather API</span>
+                <span>Connected</span>
+            </div>
+            <div class="status-item online">
+                <i class="fas fa-microchip"></i>
+                <span>Sensors</span>
+                <span>{% if IS_PI %}Active{% else %}Simulated{% endif %}</span>
+            </div>
+        </div>
+        <div class="uptime">
+            <i class="fas fa-clock"></i>
+            <span>Last Updated: {{ weather.last_updated }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_styles %}
+<style>
+    /* AQI Card Styles */
+.aqi-card .aqi-main {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.aqi-value {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+}
+
+.aqi-category {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.aqi-1 { color: #00e400; }  /* Good */
+.aqi-2 { color: #ffff00; }  /* Fair */
+.aqi-3 { color: #ff7e00; }  /* Moderate */
+.aqi-4 { color: #ff0000; }  /* Poor */
+.aqi-5 { color: #8f3f97; }  /* Very Poor */
+
+.aqi-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    padding: 0 1.5rem;
+}
+
+.aqi-advisory {
+    padding: 1rem 1.5rem;
+    margin: 1rem 1.5rem 0;
+    border-radius: 8px;
+    background: rgba(var(--primary-accent-rgb), 0.08);
+}
+
+.aqi-advisory i {
+    margin-right: 0.5rem;
+    color: var(--primary-accent);
+}
+
+.aqi-advisory p {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.aqi-updated {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--secondary-text);
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem;
+    }
+    
+    .card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.2rem 1.5rem;
+        background: rgba(0, 0, 0, 0.03);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: var(--heading-text);
+    }
+    
+    .card-header i {
+        font-size: 1.4rem;
+        color: var(--primary-accent);
+    }
+    
+    .location {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--secondary-text);
+    }
+    
+    /* Weather Card Styles */
+    .weather-card .weather-main {
+        padding: 1.5rem;
+        text-align: center;
+        position: relative;
+    }
+    
+    .weather-icon {
+        font-size: 3.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .weather-icon.raining {
+        color: #4d8cff;
+        animation: rainPulse 3s infinite;
+    }
+    
+    .weather-icon.sunny {
+        color: #ffb74d;
+        animation: sunPulse 3s infinite;
+    }
+    
+    .temp {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--heading-text);
+        display: block;
+        line-height: 1.2;
+    }
+    
+    .weather-status {
+        margin-top: 0.5rem;
+        color: var(--secondary-text);
+        font-size: 1.1rem;
+    }
+    
+    .weather-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 1rem;
+        padding: 0 1.5rem 1.5rem;
+    }
+    
+    .detail-item {
+        text-align: center;
+        padding: 0.8rem;
+        background: rgba(var(--primary-accent-rgb), 0.08);
+        border-radius: 8px;
+    }
+    
+    .detail-item i {
+        font-size: 1.5rem;
+        color: var(--primary-accent);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .detail-item span {
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: var(--heading-text);
+        display: block;
+    }
+    
+    .detail-item p {
+        margin-top: 0.3rem;
+        font-size: 0.85rem;
+        color: var(--secondary-text);
+    }
+    
+    /* Gas/Water Card Styles */
+    .gas-card, .water-card {
+        padding: 1.5rem;
+    }
+    
+    .alert-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .alert-badge.danger {
+        background: rgba(220, 53, 69, 0.15);
+        color: var(--danger);
+    }
+    
+    .alert-badge.safe {
+        background: rgba(40, 167, 69, 0.15);
+        color: var(--success);
+    }
+    
+    .warning-text {
+        color: var(--danger);
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+    }
+    
+    .normal-text {
+        color: var(--success);
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+    }
+    
+    .sensor-status {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.8rem;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+    
+    .status-label {
+        font-size: 0.9rem;
+        color: var(--secondary-text);
+    }
+    
+    .status-value {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .status-value.safe {
+        color: var(--success);
+    }
+    
+    .status-value.danger {
+        color: var(--danger);
+    }
+    
+    /* System Status Card */
+    .system-card {
+        padding: 1.5rem;
+    }
+    
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .status-item {
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.03);
+    }
+    
+    .status-item i {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .status-item span {
+        display: block;
+    }
+    
+    .status-item.online i {
+        color: var(--success);
+    }
+    
+    .status-item.offline i {
+        color: var(--danger);
+    }
+    
+    .uptime {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--secondary-text);
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 8px;
+    }
+    
+    /* Animations */
+    @keyframes rainPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    @keyframes sunPulse {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(10deg); }
+        50% { transform: rotate(0deg); }
+        75% { transform: rotate(-10deg); }
+        100% { transform: rotate(0deg); }
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

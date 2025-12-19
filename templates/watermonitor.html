@@ -1,0 +1,207 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Water Monitor{% endblock %}
+
+{% block page_styles %}
+<style>
+    .water-monitor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .pipeline-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .pipeline-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .pipeline-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--primary-accent);
+        display: grid;
+        place-items: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .pipeline-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .pipeline-value {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--heading-text);
+        margin: 1rem 0;
+    }
+    
+    .pipeline-label {
+        font-size: 1.1rem;
+        color: var(--secondary-text);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table th, .data-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .data-table th {
+        background-color: rgba(var(--primary-accent-rgb), 0.1);
+        font-weight: 600;
+    }
+    
+    .data-table tr:hover {
+        background-color: rgba(var(--primary-accent-rgb), 0.05);
+    }
+    
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        margin-top: auto;
+    }
+    
+    .last-updated {
+        font-size: 0.85rem;
+        color: var(--secondary-text);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <h2 class="section-title">Water Flow Monitoring</h2>
+    
+    <div class="water-monitor-grid">
+        <div class="card pipeline-card">
+            <div class="pipeline-header">
+                <div class="pipeline-icon">
+                    <i class="fas fa-faucet"></i>
+                </div>
+                <h3>Pipeline 1</h3>
+            </div>
+            <div class="pipeline-content">
+                <div class="pipeline-value" id="pipeline1current">{{pipeline1_data[0]}}</div>
+                <div class="pipeline-label">Liters Today</div>
+            </div>
+            <div class="card-footer">
+                <div class="last-updated" id="pipeline1-updated">Updated: Just now</div>
+            </div>
+        </div>
+        
+        <div class="card pipeline-card">
+            <div class="pipeline-header">
+                <div class="pipeline-icon">
+                    <i class="fas fa-faucet"></i>
+                </div>
+                <h3>Pipeline 2</h3>
+            </div>
+            <div class="pipeline-content">
+                <div class="pipeline-value" id="pipeline2current">{{pipeline2_data[0]}}</div>
+                <div class="pipeline-label">Liters Today</div>
+            </div>
+            <div class="card-footer">
+                <div class="last-updated" id="pipeline2-updated">Updated: Just now</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3>Last 7 Days Consumption</h3>
+        </div>
+        <div class="card-body">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Pipeline 1 (Liters)</th>
+                        <th>Pipeline 2 (Liters)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in range(dates|length) %}
+                    <tr>
+                        <td>{{ dates[i] }}</td>
+                        <td>{{ pipeline1_data[i] }}</td>
+                        <td>{{ pipeline2_data[i] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    // Update current pipeline values
+    function updateCurrentData() {
+        fetch("{{ url_for('watermonitor.get_current_data') }}")
+            .then(response => response.json())
+            .then(data => {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                document.getElementById('pipeline1-current').textContent = data.pipeline1;
+                document.getElementById('pipeline2-current').textContent = data.pipeline2;
+                
+                document.getElementById('pipeline1-updated').textContent = `Updated: ${timeString}`;
+                document.getElementById('pipeline2-updated').textContent = `Updated: ${timeString}`;
+            });
+    }
+    
+    // Update every 15 seconds
+    setInterval(updateCurrentData, 15000);
+    updateCurrentData(); // Initial call
+    
+    // 3D card effect
+    document.querySelectorAll('.pipeline-card').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateY = (x - centerX) / 25;
+            const rotateX = (centerY - y) / 25;
+            
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+            card.style.boxShadow = '0 25px 50px rgba(0, 0, 0, 0.15)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+            card.style.boxShadow = 'var(--shadow-light)';
+        });
+    });
+</script>
+{% endblock %}

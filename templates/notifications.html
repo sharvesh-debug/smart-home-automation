@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+<div class="card notification-page-card">
+    <div class="card-header notification-header"><h3>All Notifications</h3></div>
+    <ul id="notification-list-ul" class="notification-list">
+        {% if notifications %}
+            {% for notification in notifications %}
+            <li class="{{ 'read' if notification.read else 'unread' }}">
+                <a href="{{ notification.link }}" class="notification-link">
+                    <div class="notif-icon-wrapper"><div class="notif-icon {{ notification.color }}"><i class="fas {{ notification.icon }}"></i></div></div>
+                    <div class="notif-content"><p class="notif-text">{{ notification.text }}</p><span class="notif-time">{{ notification.time }}</span></div>
+                    <div class="notif-arrow"><i class="fas fa-chevron-right"></i></div>
+                </a>
+            </li>
+            {% endfor %}
+        {% else %}
+            <li class="no-notifications"><i class="fas fa-bell-slash"></i><p>No recent notifications.</p></li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}
